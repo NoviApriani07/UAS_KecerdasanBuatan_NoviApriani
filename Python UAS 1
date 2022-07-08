@@ -1,0 +1,64 @@
+# UAS_KecerdasanBuatan_NoviApriani
+ from fuzzy_1 import (
+    down,
+    kinerja,
+    kedisiplinan,
+    kemampuan,
+    up
+)
+
+class kinerjaA(kinerja):
+    median = 34
+
+    def dapatReward(self, x):
+        if x >= self.median:
+            return 0
+        elif x<= self.minimum:
+            return 1
+        else:
+            return down(x, self.minimum, self.median)
+    
+    def tidakdapatReward(self, x):
+        if x >= self.maximum:
+            return 1
+        elif x<= self.median:
+            return 0
+        else:
+            return up(x, self.median, self.maximum)
+    
+    def DiPertimbangkan(self, x):
+        if x >= self.maximum or x<= self.minimum:
+            return 0
+        elif self.minimum < x < self.median:
+            return up(x, self.minimum, self.median)
+        elif self.median < x < self.maximum:
+            return down(x, self.median, self.maximum)
+        else:
+            return 1
+
+class KedisiplinanA(Kedisiplinan):
+
+    def inferensi(self):
+        kja = kinerjaA()
+        kds = kedisiplinan()
+        kmp = Kemampuan()
+        data_inferensi = super()._inferensi(kja=kja)
+        #IF Kinerja memuaskan AND Kedisiplinan baik AND Kemampuan
+        #meningkat THEN Reward dapat
+        a5 = min(kja.memuaskan(self.kinerja), kds.baik(self.Kedisiplinan), kmp.meningkat(self.kemampuan))
+        z5 = self._dapatReward(a5)
+        data_inferensi.append((a5, z5))
+        #IF Kinerja mengecewakan AND Kedisiplinan baik AND Kemampuan menurun THEN
+        #Rewardtidak dapat.
+        a6 = min(kja.mengecewakan(self.kinerja), kds.baik(self.kedisiplinan), kmp.menurun(self.kemampuan))
+        z6 = self._tidakdapatReward(a6)
+        data_inferensi.append((a6, z6))
+        return data_inferensi
+        # IF Kinerja memuaskan AND Kedisiplinan buruk AND Kemampuan meningkat THEN
+        #Reward di pertimbangkan.
+        a7 = min(kja.memuaskan(self.kinerja), kds.buruk(self.kedisiplinan), kmp.meningkat(self.kemampuan))
+        z7 = self._DiPertimbangkan(a7)
+        data_inferensi.append((a7, z7))
+        return data_inferensi
+    def defuzifikasi(self):
+        return super().defuzifikasi(self._inferensi())
